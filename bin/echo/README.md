@@ -1,19 +1,32 @@
-# echo
+## echo
 
-Write arguments to standard output.
+write arguments to standard output
 
-## Specification
+### Synopsis
+
+`echo [string...]`
+
+### Description
+
+The *echo* utility writes its arguments to standard output, followed by a
+\<newline\>. If there are no arguments, only the \<newline\> is written.
+
+### Options
+
+No options are supported.
+
+### Specification
 
 Primary specification:
 POSIX.1-2024
 
-Extensions:
-GNU extensions are not currently supported.
+### Implementation
 
-## Synopsis
+- No options are supported.
+- Backslash escape sequences are not interpreted.
 
-echo [string...]
+### Status
 
-## Status
+[x] Basic POSIX implementation.
 
-Basic POSIX implementation.
+No further extensions are planned.
