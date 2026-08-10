@@ -8,8 +8,8 @@ write arguments to standard output
 
 ### Description
 
-The *echo* utility writes its arguments to standard output, followed by a
-\<newline\>. If there are no arguments, only the \<newline\> is written.
+Prints its arguments, separated by a single space, followed by a newline, to
+standard output.
 
 ### Options
 
@@ -20,13 +20,13 @@ No options are supported.
 Primary specification:
 POSIX.1-2024
 
-### Implementation
+## Implementation
 
 - No options are supported.
 - Backslash escape sequences are not interpreted.
 
-### Status
+## Status
 
-[x] Basic POSIX implementation.
+- [x] Basic POSIX implementation.
 
 No further extensions are planned.
