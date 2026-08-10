@@ -1,21 +1,21 @@
-## echo
+# echo
 
 write arguments to standard output
 
-### Synopsis
+## Synopsis
 
 `echo [string...]`
 
-### Description
+## Description
 
 Prints its arguments, separated by a single space, followed by a newline, to
 standard output.
 
-### Options
+## Options
 
 No options are supported.
 
-### Specification
+## Specification
 
 Primary specification:
 POSIX.1-2024
