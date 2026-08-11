@@ -12,42 +12,48 @@ the Unix/Linux programming interface.
 
 ## Utilities
 
-- [x] `echo`
-- [ ] `wc`
-- [ ] `head`
-- [ ] `tail`
-- [ ] `cat`
-- [ ] `tee`
-- [ ] `cp`
-- [ ] `dd`
-- [ ] `sort`
-- [ ] `uniq`
-- [ ] `grep`
-- [ ] `cut`
-- [ ] `paste`
-- [ ] `join`
-- [ ] `tr`
-- [ ] `stat`
-- [ ] `touch`
-- [ ] `chmod`
-- [ ] `ln`
-- [ ] `readlink`
-- [ ] `realpath`
-- [ ] `mkdir`
-- [ ] `rmdir`
-- [ ] ``ls``
-- [ ] `find`
-- [ ] `du`
-- [ ] `rm`
-- And more!
+| Utility | Status
+|---|---|
+| `echo` | ✓ Complete |
+| `wc` | ◐ Partial |
+| `head` | -- Not started |
+| `tail` | -- Not started |
+| `cat` | -- Not started |
+| `tee` | -- Not started |
+| `cp` | -- Not started |
+| `dd` | -- Not started |
+| `sort` | -- Not started |
+| `uniq` | -- Not started |
+| `grep` | -- Not started |
+| `cut` | -- Not started |
+| `paste` | -- Not started |
+| `join` | -- Not started |
+| `tr` | -- Not started |
+| `stat` | -- Not started |
+| `touch` | -- Not started |
+| `chmod` | -- Not started |
+| `ln` | - Not started |
+| `readlink` | -- Not started |
+| `realpath` | -- Not started |
+| `mkdir` | -- Not started |
+| `rmdir` | -- Not started |
+| `ls` | -- Not started |
+| `find` | -- Not started |
+| `du` | -- Not started |
+| `rm` | -- Not started |
+
+**Status:**\
+✓ **Complete** - Meets the project's target specification.\
+◐ **Partial** - Functional implementation exists, but the target specification is not yet fully implemented. (See individual READMEs for more details.)\
+-- **Not started** - No implementation yet.
 
 ## Building
 
-C Standard: C23\
-Compiler: gcc\
-Build system: Make\
-To build everything: `make`\
-To build `program`: `make <program>`\
+**C Standard:** C23\
+**Compiler:** gcc\
+**Build system:** Make\
+**To build everything:** `make`\
+**To build a specific utility:** `make echo`
 
 ## Testing
 
@@ -83,3 +89,5 @@ is committed here or used in any of my projects.
   2nd ed. Prentice Hall, 1988.
 - King, K. N. *C Programming: A Modern Approach*. 2nd ed.
   W. W. Norton & Company, 2008.
+- Stevens, W. Richard, and Stephen A. Rago. *Advanced Programming in the
+  UNIX Environment*. 3rd ed. Addison-Wesley Professional, 2013.
