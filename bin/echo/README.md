@@ -29,4 +29,8 @@ POSIX.1-2024
 
 - [x] Basic POSIX implementation.
 
-No further extensions are planned.
+## References
+
+- IEEE Std 1003.1-2024, *echo*.
+- Free Software Foundation. “echo(1).” *GNU Coreutils Manual*, version 9.11,
+  2026.

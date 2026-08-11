@@ -1,4 +1,4 @@
-PROGRAMS= echo
+PROGRAMS= echo wc
 
 .PHONY: all clean $(PROGRAMS)
 

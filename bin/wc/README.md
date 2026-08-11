@@ -68,3 +68,9 @@ implementation supports only the default counting behavior.
 - [ ] Supports -c, -l, and -w.
 - [ ] Supports -m (requires multibyte character support).
 - [ ] Full POSIX implementation.
+
+## References
+
+- IEEE Std 1003.1-2024, *wc*.
+- Free Software Foundation. “wc(1).” *GNU Coreutils Manual*, version 9.11,
+  2026.
