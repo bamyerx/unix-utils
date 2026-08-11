@@ -22,8 +22,14 @@ POSIX.1-2024
 
 ## Implementation
 
-- No options are supported.
-- Backslash escape sequences are not interpreted.
+I've opted for a deliberately minimal POSIX-compliant implementation here. In
+particular, POSIX specifies that `echo` shall not support any options.
+Consequently, this implementation does not recognize `-n`, `-e`, `-E`, or `--` 
+as options and instead treats them as operands.
+
+Additionally, the base specification states that the handling backslash espcape 
+sequences is implementation-defined. I've chosen to not interpret them and
+therefore, this implementation writes all operands literally.
 
 ## Status
 
