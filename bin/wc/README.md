@@ -39,25 +39,7 @@ POSIX.1-2024
 
 ## Implementation
 
-The current implementation operates on input as a byte stream using `getc()`.
-For each byte, it maintains counters for newlines, words, and bytes. Word
-boundaries are determined using the C locale's `isspace()` classification.
 
-Input is processed through a common operand-processing path. When no operands
-are specified, `-` is synthesized as the operand and refers to standard input.
-File operands are opened in binary mode.
-
-Counts are represented using `uintmax_t`. The byte counter is checked for
-overflow before each increment; because newline and word counts cannot exceed
-the number of input bytes, this also bounds those counters.
-
-The counting function reports success, input errors, and counter overflow
-separately through `CountStatus`, allowing the caller to handle these
-conditions independently.
-
-The implementation currently does not perform multibyte character processing
-and therefore cannot implement `-m`. Output formatting is currently
-tab-separated rather than aligned to the field widths.
 
 ## Status
 
