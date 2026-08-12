@@ -14,9 +14,9 @@ the Unix/Linux programming interface.
 
 | Utility | Status
 |---|---|
-| `echo` | ✓ Complete |
-| `wc` | ◐ Partial |
-| `head` | -- Not started |
+| [`echo`](src/echo/) | ✓ Complete |
+| [`wc`](src/wc/) | ◐ Partial |
+| [`head`](src/head/) | ◐ Partial |
 | `tail` | -- Not started |
 | `cat` | -- Not started |
 | `tee` | -- Not started |
