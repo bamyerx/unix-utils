@@ -52,7 +52,7 @@ the Unix/Linux programming interface.
 **C Standard:** C17\
 **Compiler:** gcc\
 **Build system:** Make\
-**POSIX feature-test macro**: `_POSIX_C_SOURCE=202405L`
+**POSIX feature-test macro**: `_POSIX_C_SOURCE=202405L`\
 **To build everything:** `make`\
 **To build a specific utility:** `make echo`
 
