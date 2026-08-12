@@ -47,15 +47,16 @@ the Unix/Linux programming interface.
 ◐ **Partial** - Functional implementation exists, but the target specification is not yet fully implemented. (See individual READMEs for more details.)\
 -- **Not started** - No implementation yet.
 
-## Building
+## Build
 
-**C Standard:** C23\
+**C Standard:** C17\
 **Compiler:** gcc\
 **Build system:** Make\
+**POSIX feature-test macro**: `_POSIX_C_SOURCE=202405L`
 **To build everything:** `make`\
 **To build a specific utility:** `make echo`
 
-## Testing
+## Test
 
 Currently, each utility is tested against the equivalent program on my Linux
 system and also against the POSIX specifications.

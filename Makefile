@@ -1,13 +1,13 @@
-PROGRAMS= echo wc
+PROGRAMS= echo wc head
 
 .PHONY: all clean $(PROGRAMS)
 
 all: $(PROGRAMS)
 
 $(PROGRAMS):
-	$(MAKE) -C bin/$@
+	$(MAKE) -C src/$@
 
 clean:
 	for dir in $(PROGRAMS); do \
-		$(MAKE) -C bin/$$dir clean; \
+		$(MAKE) -C src/$$dir clean; \
 	done
