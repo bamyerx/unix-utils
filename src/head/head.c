@@ -8,76 +8,75 @@
  * A basic implementation with only default behavior and no options.
  */
 
-#include <err.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 enum status {
 	SUCCESS,
-	INPUT_ERROR,
-	OUTPUT_ERROR
+	ERROR
 };
 
-static enum status head(FILE *fp);
+static int head(FILE *fp, int *error);
 
 int
 main(int argc, char *argv[])
 {
 	const char *name;
 	FILE *fp;
-	int status = EXIT_SUCCESS;
+	int error;
+	int exit_status = EXIT_SUCCESS;
 
-	for (int i = 1; i < argc || argc == 1; i++) {
-		if (argc == 1 || strcmp(argv[i], "-") == 0) {
+	for (int i = 1; i < argc || i == 1; i++) {
+		name = argv[i];
+
+		/* Treat "-" as specifying standard input */
+		if (name == NULL || strcmp(name, "-") == 0) {
 			name = "stdin";
 			fp = stdin;
-		} else {
-			name = argv[i];
+		} else
 			fp = fopen(name, "rb");
-		}
 
 		if (fp == NULL) {
-			warn("%s", name);
-			status = EXIT_FAILURE;
+			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(errno));
+			exit_status = EXIT_FAILURE;
 			continue;
 		}
 
 		if (argc > 2)
 			printf("%s==> %s <==\n", (i == 1) ? "" : "\n", name);
-		switch (head(fp)) {
-		case SUCCESS:
-			break;
-		case INPUT_ERROR:
-			warnx("%s: input error", name);
-			break;
-		case OUTPUT_ERROR:
-			warnx("%s: output error", name);
-			break;
+		if (head(fp, &error) == ERROR) {
+			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(error));
+			exit_status = EXIT_FAILURE;
 		}
 
 		if (fp != stdin && fclose(fp) != 0) {
-			warn("%s", name);
-			status = EXIT_FAILURE;
+			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(errno));
+			exit_status = EXIT_FAILURE;
 		}
 	}
 
-	return status;
+	return exit_status;
 }
 
-static enum status
-head(FILE *fp)
+static int
+head(FILE *fp, int *error)
 {
 	int c;
 	int n = 10;
 
 	while (n > 0 && (c = getc(fp)) != EOF) {
-		if (putchar(c) == EOF)
-			return OUTPUT_ERROR;
+		if (putchar(c) == EOF) {
+			*error = errno;
+			return ERROR;
+		}
 		if (c == '\n')
 			n--;
 	}
-	if (ferror(fp))
-		return INPUT_ERROR;
+	if (ferror(fp)) {
+		*error = errno;
+		return ERROR;
+	}
 	return SUCCESS;
 }
