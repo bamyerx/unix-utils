@@ -10,6 +10,7 @@
  */
 
 #include <ctype.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <stdbool.h>
@@ -23,14 +24,14 @@ struct counts {
 	uintmax_t lines;
 };
 
-typedef enum CountStatus {
-	COUNT_SUCCESS,
-	COUNT_ERROR,
-	COUNT_OVERFLOW
-} CountStatus;
+enum status {
+	SUCCESS,
+	INPUT_ERROR,
+	OVERFLOW
+};
 
 void reset_counts(struct counts *counts);
-int count(FILE *fp, struct counts *counts);
+int count(FILE *fp, struct counts *counts, int *error);
 void print_counts(const struct counts *counts, const char *name);
 
 /*
@@ -43,65 +44,57 @@ main(int argc, char *argv[])
 	struct counts counts;
 	struct counts total = {0};
 
-	/* 
-	 * n_operands is used to normalize the input prior to the main loop; this
-	 * way, if wc is called with no arguments, we can synthesize a "-" operand
-	 * to indicate that stdin and populate operands with argv otherwise.
-	 */
-	size_t n_operands = (argc == 1) ? 1 : (size_t) argc - 1;
-	char **operands = malloc(n_operands * sizeof *operands);
-	if (operands == NULL) {
-		fprintf(stderr, "wc: allocation failure\n");
-		return EXIT_FAILURE;
-	}
-	if (n_operands == 1)
-		operands[0] = "-";
-	else
-		for (size_t i = 0; i < n_operands; i++)
-			operands[i] = argv[i + 1];
-
-	bool overflow = false;
+	const char *name;
+	FILE *fp;
+	int error;
 	int exit_status = EXIT_SUCCESS;
 
-	for (size_t i = 0; i < n_operands; i++) {
+	for (int i = 1; argv[i] != NULL || i == 1; i++) {
+		name = argv[i];
 
-		const char *name = operands[i];
-		
 		/* Treat "-" as specifying standard input */
-		FILE *fp = (strcmp(name, "-") != 0) ? fopen(name, "rb") : stdin;
+		if (name == NULL || strcmp(name, "-") == 0) {
+			name = "stdin";
+			fp = stdin;
+		} else
+			fp = fopen(name, "rb");
+		
 		if (fp == NULL) {
-			fprintf(stderr, "wc: can't open %s\n", name);
+			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(errno));
 			exit_status = EXIT_FAILURE;
 			continue;
 		}
 
 		reset_counts(&counts);
-		CountStatus count_status = count(fp, &counts);
-		if (fp != stdin)
-			fclose(fp);
-
-		switch (count_status) {
-		case COUNT_ERROR:
-			fprintf(stderr, "wc: %s: read error\n", name);
-			exit_status = EXIT_FAILURE;
-			break;
-		case COUNT_OVERFLOW:
-			fprintf(stderr, "wc: %s: count exceeds limit\n", name);
-			overflow = true;
-			exit_status = EXIT_FAILURE;
-			break;
-		case COUNT_SUCCESS:
+		switch (count(fp, &counts, &error)) {
+		case SUCCESS:
 			print_counts(&counts, name);
 			total.bytes += counts.bytes;
 			total.words += counts.words;
 			total.lines += counts.lines;
 			break;
+		case INPUT_ERROR:
+			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(error));
+			exit_status = EXIT_FAILURE;
+			break;
+		case OVERFLOW:
+			fprintf(stderr, "%s: %s: count exceeds limit\n", argv[0], name);
+			exit_status = EXIT_FAILURE;
+			break;
 		}
+
+		if (fp != stdin && fclose(fp) != 0) {
+			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(errno));
+			exit_status = EXIT_FAILURE;
+		}
+
+		/* No arguments left */
+		if (argv[i] == NULL)
+			break;
 	}
-	if (n_operands > 1 && !overflow)
+	if (argc > 2)
 		print_counts(&total, "total");
 
-	free(operands);
 	return exit_status;
 }
 
@@ -109,7 +102,7 @@ main(int argc, char *argv[])
  * count: Count bytes, words, and lines for fp and store in counts.
  */
 int
-count(FILE *fp, struct counts *counts)
+count(FILE *fp, struct counts *counts, int *error)
 {
 	int c;
 
@@ -123,7 +116,7 @@ count(FILE *fp, struct counts *counts)
 		 * exceed the byte count, so checking them is unnecessary.
 		 */
 		if (counts->bytes == UINTMAX_MAX)
-			return COUNT_OVERFLOW;
+			return OVERFLOW;
 
 		counts->bytes++;
 		if (c == '\n')
@@ -137,15 +130,14 @@ count(FILE *fp, struct counts *counts)
 		}
 	}
 
-	if (ferror(fp))
-		return COUNT_ERROR;
+	if (ferror(fp)) {
+		*error = errno;
+		return INPUT_ERROR;
+	}
 
-	return COUNT_SUCCESS;
+	return SUCCESS;
 }
 
-/*
- * reset_counts: Reset all counters to zero.
- */
 void
 reset_counts(struct counts *counts)
 {
@@ -154,9 +146,6 @@ reset_counts(struct counts *counts)
 	counts->lines = 0;
 }
 
-/*
- * print_counts: Format and print counts.
- */
 void
 print_counts(const struct counts *counts, const char *name)
 {
