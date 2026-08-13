@@ -30,9 +30,9 @@ enum status {
 	OVERFLOW
 };
 
-void reset_counts(struct counts *counts);
-int count(FILE *fp, struct counts *counts, int *error);
-void print_counts(const struct counts *counts, const char *name);
+static void reset_counts(struct counts *counts);
+static int count(FILE *fp, struct counts *counts, int *error);
+static void print_counts(const struct counts *counts, const char *name);
 
 /*
  * wc: Print newline, word, and byte counts for each input file and a total
@@ -49,7 +49,7 @@ main(int argc, char *argv[])
 	int error;
 	int exit_status = EXIT_SUCCESS;
 
-	for (int i = 1; argv[i] != NULL || i == 1; i++) {
+	for (int i = 1; i < argc || i == 1; i++) {
 		name = argv[i];
 
 		/* Treat "-" as specifying standard input */
@@ -87,10 +87,6 @@ main(int argc, char *argv[])
 			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(errno));
 			exit_status = EXIT_FAILURE;
 		}
-
-		/* No arguments left */
-		if (argv[i] == NULL)
-			break;
 	}
 	if (argc > 2)
 		print_counts(&total, "total");
@@ -101,7 +97,7 @@ main(int argc, char *argv[])
 /*
  * count: Count bytes, words, and lines for fp and store in counts.
  */
-int
+static int
 count(FILE *fp, struct counts *counts, int *error)
 {
 	int c;
@@ -138,7 +134,7 @@ count(FILE *fp, struct counts *counts, int *error)
 	return SUCCESS;
 }
 
-void
+static void
 reset_counts(struct counts *counts)
 {
 	counts->bytes = 0;
@@ -146,7 +142,7 @@ reset_counts(struct counts *counts)
 	counts->lines = 0;
 }
 
-void
+static void
 print_counts(const struct counts *counts, const char *name)
 {
 	printf("%ju\t%ju\t%ju\t%s\n", 
