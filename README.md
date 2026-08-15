@@ -15,10 +15,10 @@ the Unix/Linux programming interface.
 | Utility | Status
 |---|---|
 | [`echo`](src/echo/) | ✓ Complete |
+| [`cat`](src/cat) | ✓ Complete |
 | [`wc`](src/wc/) | ◐ Partial |
 | [`head`](src/head/) | ◐ Partial |
 | `tail` | -- Not started |
-| `cat` | -- Not started |
 | `tee` | -- Not started |
 | `cp` | -- Not started |
 | `dd` | -- Not started |
@@ -47,14 +47,29 @@ the Unix/Linux programming interface.
 ◐ **Partial** - Functional implementation exists, but the target specification is not yet fully implemented. (See individual READMEs for more details.)\
 -- **Not started** - No implementation yet.
 
-## Build
+## Build & Run
+
+## Build & Run
 
 **C Standard:** C17\
 **Compiler:** gcc\
 **Build system:** Make\
-**POSIX feature-test macro**: `_POSIX_C_SOURCE=202405L`\
-**To build everything:** `make`\
-**To build a specific utility:** `make echo`
+**POSIX feature-test macro**: `_POSIX_C_SOURCE=202405L`
+
+### From the repository root:
+
+To build everything:
+```
+make
+```
+To build a specific utility: 
+```
+make echo
+```
+To run a specific utility: 
+```
+./build/echo
+```
 
 ## Test
 
