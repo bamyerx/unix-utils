@@ -41,6 +41,6 @@ This implementation accepts arguments of the form `-n 100` and `-n100` but not
 
 ## References
 
-- IEEE Std 1003.1-2024, *echo*.
-- Free Software Foundation. “echo(1).” *GNU Coreutils Manual*, version 9.11,
+- IEEE Std 1003.1-2024, *head*.
+- Free Software Foundation. “head(1).” *GNU Coreutils Manual*, version 9.11,
   2026.
