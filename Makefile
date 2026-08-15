@@ -1,4 +1,4 @@
-PROGRAMS= echo wc head
+PROGRAMS= echo wc head cat
 
 .PHONY: all clean $(PROGRAMS)
 
