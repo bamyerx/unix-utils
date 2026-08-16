@@ -17,7 +17,7 @@ the Unix/Linux programming interface.
 | [`echo`](src/echo/) | ✓ Complete |
 | [`cat`](src/cat) | ✓ Complete |
 | [`wc`](src/wc/) | ◐ Partial |
-| [`head`](src/head/) | ◐ Partial |
+| [`head`](src/head/) | ✓ Complete |
 | `tail` | -- Not started |
 | `tee` | -- Not started |
 | `cp` | -- Not started |
