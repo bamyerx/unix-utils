@@ -29,15 +29,17 @@ arguments are treated as operands.
 Primary specification:
 POSIX.1-2024
 
-## Implementation
+## Implementation Notes
 
-This implementation accepts arguments of the form `-n 100` and `-n100` but not
-`-100` so as to conform to XBD 12.2 Utility Syntax Guidelines.
+For the case when the *number* supplied as an argument to `-c` or `-n` exceeds
+`SIZE_MAX`, I treat *number* as equaling `SIZE_MAX`, which in practice
+corresponds to the usual `head` behavior of printing the entire file when the
+file has fewer bytes or lines than requested.
 
 ## Status
 
 - [x] Default behavior with no options
-- [ ] Basic POSIX implementation.
+- [x] Full POSIX implementation.
 
 ## References
 
