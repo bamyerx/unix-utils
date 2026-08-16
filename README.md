@@ -49,8 +49,6 @@ the Unix/Linux programming interface.
 
 ## Build & Run
 
-## Build & Run
-
 **C Standard:** C17\
 **Compiler:** gcc\
 **Build system:** Make\
