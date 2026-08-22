@@ -5,8 +5,7 @@
  *
  * wc - word, line, and byte or character count
  *
- * A basic implementation which does not support options or multibyte
- * characters yet.
+ * An implementation which supports the -c, -l, and -w options.
  */
 
 #include <ctype.h>
@@ -17,11 +16,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 struct counts {
-	uintmax_t bytes;
-	uintmax_t words;
 	uintmax_t lines;
+	uintmax_t words;
+	uintmax_t bytes;
+};
+
+struct mode {
+	bool lines;
+	bool words;
+	bool bytes;
 };
 
 enum status {
@@ -32,7 +38,7 @@ enum status {
 
 static void reset_counts(struct counts *counts);
 static int count(FILE *fp, struct counts *counts, int *error);
-static void print_counts(const struct counts *counts, const char *name);
+static void print_counts(const struct counts *counts, const struct mode *mode, const char *name);
 
 /*
  * wc: Print newline, word, and byte counts for each input file and a total
@@ -42,14 +48,37 @@ int
 main(int argc, char *argv[])
 {	
 	struct counts counts;
+	struct mode mode = {0};
 	struct counts total = {0};
 
 	const char *name;
 	FILE *fp;
 	int error;
 	int exit_status = EXIT_SUCCESS;
+	int c;
+	
+	while ((c = getopt(argc, argv, "clw")) != -1) {
+		switch (c) {
+		case 'c':
+			mode.bytes = true;
+			break;
+		case 'l':
+			mode.lines = true;
+			break;
+		case 'w':
+			mode.words = true;
+			break;
+		default:
+			fprintf(stderr, "usage: wc [-clw] [file...]\n");
+			return EXIT_FAILURE;
+		}
+	}
 
-	for (int i = 1; i < argc || i == 1; i++) {
+	/* Default is to print lines, words, and bytes */
+	if (!mode.lines && !mode.words && !mode.bytes)
+		mode.lines = mode.words = mode.bytes = true;
+
+	for (int i = optind; i < argc || i == optind; i++) {
 		name = argv[i];
 
 		/* Treat "-" as specifying standard input */
@@ -68,10 +97,10 @@ main(int argc, char *argv[])
 		reset_counts(&counts);
 		switch (count(fp, &counts, &error)) {
 		case SUCCESS:
-			print_counts(&counts, name);
-			total.bytes += counts.bytes;
-			total.words += counts.words;
+			print_counts(&counts, &mode, name);
 			total.lines += counts.lines;
+			total.words += counts.words;
+			total.bytes += counts.bytes;
 			break;
 		case INPUT_ERROR:
 			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(error));
@@ -88,8 +117,8 @@ main(int argc, char *argv[])
 			exit_status = EXIT_FAILURE;
 		}
 	}
-	if (argc > 2)
-		print_counts(&total, "total");
+	if (argc - optind > 1)
+		print_counts(&total, &mode, "total");
 
 	return exit_status;
 }
@@ -137,19 +166,23 @@ count(FILE *fp, struct counts *counts, int *error)
 static void
 reset_counts(struct counts *counts)
 {
-	counts->bytes = 0;
-	counts->words = 0;
 	counts->lines = 0;
+	counts->words = 0;
+	counts->bytes = 0;
 }
 
 static void
-print_counts(const struct counts *counts, const char *name)
+print_counts(const struct counts *counts, const struct mode *mode, const char *name)
 {
-	printf("%ju\t%ju\t%ju\t%s\n", 
-			counts->lines, 
-			counts->words, 
-			counts->bytes,
-			name ? name: "");
+	if (mode->lines)
+		printf("%ju\t", counts->lines);
+	if (mode->words)
+		printf("%ju\t", counts->words);
+	if (mode->bytes)
+		printf("%ju", counts->bytes);
+	if (name)
+		printf("\t%s", name);
+	printf("\n");
 }
 
 

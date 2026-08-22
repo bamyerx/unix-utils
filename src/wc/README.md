@@ -37,19 +37,18 @@ counts are printed.
 Primary specification:
 POSIX.1-2024
 
-## Implementation
+## Implementation Notes
 
-
+`wc` counts lines, words, and bytes regardless of whether or not those options
+are specified. Specifying an option only changes what is printed.
 
 ## Status
 
-The interface described above is the target interface. The current
-implementation supports only the default counting behavior.
-
 - [x] Counts bytes, words, and newlines for zero or more files.
-- [ ] Supports -c, -l, and -w.
+- [x] Supports -c, -l, and -w.
 - [ ] Supports -m (requires multibyte character support).
 - [ ] Full POSIX implementation.
+- [ ] Column width calculation for better formatting.
 
 ## References
 
