@@ -21,9 +21,9 @@ or if a file is specified as '-', read standard input.
 Primary specification:
 POSIX.1-2024
 
-## Implementation
+## Implementation Notes
 
-
+Uses getc() and putc() to implement cat.
 
 ## Status
 
