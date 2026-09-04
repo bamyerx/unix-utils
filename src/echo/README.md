@@ -20,7 +20,7 @@ No options are supported.
 Primary specification:
 POSIX.1-2024
 
-## Implementation
+## Implementation Notes
 
 I've opted for a deliberately minimal POSIX-compliant implementation here. In
 particular, POSIX specifies that `echo` shall not support any options.
