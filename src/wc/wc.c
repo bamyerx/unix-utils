@@ -18,18 +18,21 @@
 #include <string.h>
 #include <unistd.h>
 
+/* line, word, and byte counts */
 struct counts {
 	uintmax_t lines;
 	uintmax_t words;
 	uintmax_t bytes;
 };
 
+/* count modes */
 struct mode {
 	bool lines;
 	bool words;
 	bool bytes;
 };
 
+/* return statuses */
 enum status {
 	SUCCESS,
 	INPUT_ERROR,
@@ -57,6 +60,7 @@ main(int argc, char *argv[])
 	int exit_status = EXIT_SUCCESS;
 	int c;
 	
+	/* supported options: -c, -l, -w */
 	while ((c = getopt(argc, argv, "clw")) != -1) {
 		switch (c) {
 		case 'c':
@@ -74,20 +78,22 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* Default is to print lines, words, and bytes */
+	/* default is to print lines, words, and bytes */
 	if (!mode.lines && !mode.words && !mode.bytes)
 		mode.lines = mode.words = mode.bytes = true;
 
+	/* execute loop once for stdin if no args */
 	for (int i = optind; i < argc || i == optind; i++) {
 		name = argv[i];
 
-		/* Treat "-" as specifying standard input */
+		/* no args or arg = "=" specifies stdin */
 		if (name == NULL || strcmp(name, "-") == 0) {
 			name = "stdin";
 			fp = stdin;
 		} else
 			fp = fopen(name, "rb");
 		
+		/* failed to open stream */
 		if (fp == NULL) {
 			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(errno));
 			exit_status = EXIT_FAILURE;
@@ -112,13 +118,22 @@ main(int argc, char *argv[])
 			break;
 		}
 
+		/* close non-stdin stream */
 		if (fp != stdin && fclose(fp) != 0) {
 			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(errno));
 			exit_status = EXIT_FAILURE;
 		}
 	}
+
+	/* print totals for more than one file */
 	if (argc - optind > 1)
 		print_counts(&total, &mode, "total");
+
+	/* flush stdout to check for errors */
+	if (fflush(stdout) == EOF) {
+		fprintf(stderr, "%s: stdout: %s\n", argv[0], strerror(errno));
+		exit_status = EXIT_FAILURE;
+	}
 
 	return exit_status;
 }
@@ -131,14 +146,16 @@ count(FILE *fp, struct counts *counts, int *error)
 {
 	int c;
 
-	/* True when previous byte was white space or at the start of input */
+	/* true when previous byte was white space or at the start of input */
 	bool in_space = true;
 
 	while ((c = getc(fp)) != EOF) {
 
 		/*
-		 * Check byte count before incrementing. Word and line counts cannot
-		 * exceed the byte count, so checking them is unnecessary.
+		 * check byte count for overflow
+		 *
+		 * note: line count <= word count <= byte count is an invariant so it is
+		 * sufficient to check byte count to detect overflow
 		 */
 		if (counts->bytes == UINTMAX_MAX)
 			return OVERFLOW;
@@ -156,6 +173,7 @@ count(FILE *fp, struct counts *counts, int *error)
 	}
 
 	if (ferror(fp)) {
+		/* read error */
 		*error = errno;
 		return INPUT_ERROR;
 	}
@@ -163,6 +181,7 @@ count(FILE *fp, struct counts *counts, int *error)
 	return SUCCESS;
 }
 
+/* reset_counts: set line, word, and byte count to zero */
 static void
 reset_counts(struct counts *counts)
 {
@@ -171,6 +190,7 @@ reset_counts(struct counts *counts)
 	counts->bytes = 0;
 }
 
+/* print_counts: print line, word, and byte counts, optionally with a name */
 static void
 print_counts(const struct counts *counts, const struct mode *mode, const char *name)
 {
