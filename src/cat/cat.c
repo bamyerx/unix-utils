@@ -40,7 +40,8 @@ main(int argc, char *argv[])
 			uflag = 1;
 			break;
 		default:
-			usage();
+			fprintf(stderr, "usage: cat [-u] [file...]\n");
+			return EXIT_FAILURE;
 		}
 
 	/* set stdout to unbuffered if -u is specified */
@@ -53,7 +54,7 @@ main(int argc, char *argv[])
 	for (int i = optind; i < argc || i == optind; i++) {
 		name = argv[i];
 
-		/* 0 args or arg == "-" specifies stdin */
+		/* no args or arg = "-" specifies stdin */
 		if (name == NULL || strcmp(name, "-") == 0) {
 			name = "stdin";
 			fp = stdin;
@@ -80,7 +81,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* flush stdout before exiting */
+	/* flush stdout to check for errors */
 	if (fflush(stdout) == EOF) {
 		fprintf(stderr, "%s: stdout: %s\n", argv[0], strerror(errno));
 		exit_status = EXIT_FAILURE;
@@ -107,12 +108,4 @@ cat(FILE *fp, int *error)
 		return ERROR;
 	}
 	return SUCCESS;
-}
-
-/* usage: print error message with correct usage */
-static void
-usage(void)
-{
-	fprintf(stderr, "usage: cat [-u] [file...]\n");
-	exit(EXIT_FAILURE);
 }
