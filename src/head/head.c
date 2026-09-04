@@ -18,11 +18,13 @@
 
 #define N_DEFAULT 10
 
+/* return statuses */
 enum status {
 	SUCCESS,
 	ERROR
 };
 
+/* print modes */
 enum mode {
 	PRINT_LINES,
 	PRINT_BYTES
@@ -43,9 +45,11 @@ main(int argc, char *argv[])
 	int c;
 	char *endptr;
 
+	/* supported options: -c, -n */
 	while ((c = getopt(argc, argv, "c:n:")) != -1) {
 		switch (c) {
 		case 'c':
+			/* ensure optarg is a positive decimal value */
 			if ((n = strtosize(optarg, &endptr, 10)) == 0 || *endptr != '\0') {
 				fprintf(stderr, "%s: invalid number of bytes: '%s'\n", argv[0], optarg);
 				return EXIT_FAILURE;
@@ -53,6 +57,7 @@ main(int argc, char *argv[])
 			mode = PRINT_BYTES;
 			break;
 		case 'n':
+			/* ensure optarg is a positive decimal value */
 			if ((n = strtosize(optarg, &endptr, 10)) == 0 || *endptr != '\0') {
 				fprintf(stderr, "%s: invalid number of lines '%s'\n", argv[0], optarg);
 				return EXIT_FAILURE;
@@ -65,38 +70,51 @@ main(int argc, char *argv[])
 		}
 	}
 
+	/* execute loop once for stdin if no args */
 	for (int i = optind; i < argc || i == optind; i++) {
 		name = argv[i];
 
-		/* Treat "-" as specifying standard input */
+		/* no args or arg = "-" specifies stdin */
 		if (name == NULL || strcmp(name, "-") == 0) {
 			name = "stdin";
 			fp = stdin;
 		} else
 			fp = fopen(name, "rb");
 
+		/* failed to open stream */
 		if (fp == NULL) {
 			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(errno));
 			exit_status = EXIT_FAILURE;
 			continue;
 		}
 
+		/* print file name header for more than one file */
 		if (argc - optind > 1)
 			printf("%s==> %s <==\n", (i == optind) ? "" : "\n", name);
+
+		/* I/O error during head */
 		if (head(fp, n, mode, &error) == ERROR) {
 			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(error));
 			exit_status = EXIT_FAILURE;
 		}
 
+		/* close non-stdin stream */
 		if (fp != stdin && fclose(fp) != 0) {
 			fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(errno));
 			exit_status = EXIT_FAILURE;
 		}
 	}
 
+	/* flush stdout to check for errors */
+	if (fflush(stdout) == EOF) {
+		fprintf(stderr, "%s: stdout: %s\n", argv[0], strerror(errno));
+		exit_status = EXIT_FAILURE;
+	}
+
 	return exit_status;
 }
 
+/* head: write the first n lines or bytes of fp to stdout */
 static int
 head(FILE *fp, size_t n, int mode, int *error)
 {
@@ -104,6 +122,7 @@ head(FILE *fp, size_t n, int mode, int *error)
 
 	while (n > 0 && (c = getc(fp)) != EOF) {
 		if (putchar(c) == EOF) {
+			/* write error */
 			*error = errno;
 			return ERROR;
 		}
@@ -113,6 +132,7 @@ head(FILE *fp, size_t n, int mode, int *error)
 			n--;
 	}
 	if (ferror(fp)) {
+		/* read error */
 		*error = errno;
 		return ERROR;
 	}
@@ -130,9 +150,7 @@ strtosize(const char *restrict nptr, char **restrict endptr, int base)
 	const char *p = nptr;
 	uintmax_t val;
 
-	/* 
-	 * Reject a string whose first non-white-space character is a '-'.
-	 */
+	/* reject if first non-white-space character is '-' */
 	while (isspace((unsigned char) *p))
 		p++;
 	if (*p == '-') {
@@ -141,16 +159,11 @@ strtosize(const char *restrict nptr, char **restrict endptr, int base)
 		return 0;
 	}
 	
-	/*
-	 * Otherwise, use strtoumax to perform the conversion.
-	 */
+	/* otherwise, convert using strtoumax */
 	errno = 0;
 	val = strtoumax(nptr, endptr, base);
 
-	/*
-	 * Ensure values exceeding SIZE_MAX are detected as a range error in
-	 * addition to any range errors propagated from strtoumax.
-	 */
+	/* ensure val > SIZE_MAX is reported as a range error */
 	if (errno == ERANGE || val > SIZE_MAX) {
 		errno = ERANGE;
 		return SIZE_MAX;
