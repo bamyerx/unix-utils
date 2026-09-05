@@ -21,7 +21,6 @@ enum status {
 };
 
 static int cat(FILE *fp, int *error);
-static void usage(void);
 
 int
 main(int argc, char *argv[])
