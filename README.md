@@ -18,7 +18,7 @@ the Unix/Linux programming interface.
 | [`cat`](src/cat) | ✓ Complete |
 | [`wc`](src/wc/) | ◐ Partial |
 | [`head`](src/head/) | ✓ Complete |
-| `tail` | -- Not started |
+| [`tail`](src/wc/) | ◐ Partial |
 | `tee` | -- Not started |
 | `cp` | -- Not started |
 | `dd` | -- Not started |
