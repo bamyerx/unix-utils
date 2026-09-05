@@ -8,10 +8,7 @@
  * A basic implementation of tail with only default behavior.
  */
 
-#include <ctype.h>
 #include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,16 +16,19 @@
 
 #define N_DEFAULT 10
 
-/* LINE_MAX * 10 */
-#define BUFSIZE 20480
-
 /* return statuses */
 enum status {
 	SUCCESS,
 	ERROR
 };
 
+struct line {
+	char *ptr;
+	size_t size;
+};
+
 static int tail(FILE *fp, size_t n, int *error);
+static void free_lines(struct line *lines, size_t n);
 
 int
 main(int argc, char *argv[])
@@ -80,85 +80,52 @@ main(int argc, char *argv[])
 static int
 tail(FILE *fp, size_t n, int *error)
 {
-	int c;
-
-	char buf[BUFSIZE];
-	size_t head = 0;
-	
-	struct line {
-		size_t start;    /* the index where the line begins */
-		size_t length;   /* the length of the line */
-	};
-
-	struct line *lines = calloc(n, sizeof(struct line));
+	/* a queue of n lines */
+	struct line *lines = calloc(n, sizeof *lines);
 	if (lines == NULL) {
 		*error = errno;
 		return ERROR;
 	}
-	size_t current = 0;    /* index of the current line */
-	size_t oldest  = 0;    /* index of the oldest line */
-	size_t nlines  = 0;    /* the number of complete lines */
+	size_t first = 0;
+	size_t last  = 0;
+	size_t nlines = 0;
 
-	while ((c = getc(fp)) != EOF) {
-
-		/* the next byte would overwrite the oldest line */
-		if (head == lines[oldest].start && nlines > 1) {
-			oldest = (oldest + 1) % n;
-			nlines--;
-		}
-
-		if (nlines == n && current == oldest) {
-			oldest = (oldest + 1) % n;
-			lines[current].length = 0;
-		}
-		if (lines[current].length == 0)
-			lines[current].start = head;
-
-		buf[head] = c;
-		head = (head + 1) % BUFSIZE;
-
-		/* ensure that length is at most BUFSIZE */
-		if (lines[current].length < BUFSIZE)
-			lines[current].length++;
-		else
-			lines[current].start = (lines[current].start + 1) % BUFSIZE;
-
-		if (c == '\n') {
-			/* ensure that nlines is at most n */
-			if (nlines < n)
-				nlines++;
-			current = (current + 1) % n;
-		}
-	}
-
-	/* include any new pending characters as a new line */
-	if (lines[current].length > 0 && current != oldest) {
+	/* read in each line while maintaining the last n lines in the queue */
+	while (getline(&lines[last].ptr, &lines[last].size, fp) != -1) {
 		if (nlines == n)
-			oldest = (oldest + 1) % n;
+			first = (first + 1) % n;
 		else
 			nlines++;
+		last = (last + 1) % n;
 	}
 
 	if (ferror(fp)) {
 		/* read error */
 		*error = errno;
-		free(lines);
+		free_lines(lines, n);
 		return ERROR;
 	}
 
 	/* print the buffered lines */
 	size_t count = nlines;
-	for (size_t i = oldest; count-- > 0; i = (i + 1) % n) {
-		size_t length = lines[i].length;
-		for (size_t j = lines[i].start; length-- > 0; j = (j + 1) % BUFSIZE)
-			if (putchar(buf[j]) == EOF) {
-				/* write error */
-				*error = errno;
-				free(lines);
-				return ERROR;
-			}
+	for (size_t i = first; count-- > 0; i = (i + 1) % n) {
+		if (fputs(lines[i].ptr, stdout) == EOF) {
+			/* write error */
+			*error = errno;
+			free_lines(lines, n);
+			return ERROR;
+		}
 	}
 
-	free(lines);
+	free_lines(lines, n);
 	return SUCCESS;
+}
+
+/* free_lines: deallocate the queue as well as each string from getline */
+static void
+free_lines(struct line *lines, size_t n)
+{
+	for (size_t i = 0; i < n; i++)
+		free(lines[i].ptr);
+	free(lines);
 }

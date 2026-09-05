@@ -41,16 +41,19 @@ POSIX.1-2024
 
 ## Implementation Notes
 
-For the initial implementation, I have used a 20480-byte circular buffer, which
-is the minimum size of buffer allowed by the POSIX specification. Due to this
-constraint, when very long lines are present, fewer than the requested number of
-lines may be printed, and in the extreme case, only the last 20480 bytes of the
-file will be printed.
+`getline()` is used to read in each line which is maintained in a circular array
+queue of the last `n` lines requested. However, while `getline()` will `realloc()`
+a buffer that is too small, it will never shrink that buffer. Therefore, if this
+program encounters the occasional very large line, it will use a lot more memory
+than necessary.
 
 ## Status
 
 - [x] Default behavior with no options
-- [ ] Full POSIX implementation.
+- [ ] Shrink very large buffers when no longer necessary
+- [ ] `-c`, `-n`, and `-r` options
+- [ ] `-f` option
+- [ ] Full POSIX implementation
 
 ## References
 
