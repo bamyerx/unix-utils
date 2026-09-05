@@ -8,9 +8,9 @@ copy the first part of files
 
 ## Description
 
-Print the first 10 lines of each argument to standard output. If no file is
+Print the first n lines of each argument to standard output. If no file is
 is specified, or if a file is specified as '-', read standard input. If a file
-has fewer than 10 lines, print the entire file.
+has fewer than n lines, print the entire file.
 
 ## Options
 
