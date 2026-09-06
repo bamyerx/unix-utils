@@ -42,15 +42,15 @@ POSIX.1-2024
 ## Implementation Notes
 
 `getline()` is used to read in each line which is maintained in a circular array
-queue of the last `n` lines requested. However, while `getline()` will `realloc()`
-a buffer that is too small, it will never shrink that buffer. Therefore, if this
-program encounters the occasional very large line, it will use a lot more memory
-than necessary.
+queue of the last `n` lines, where `n` is the number of lines requested. However,
+while `getline()` will `realloc()` a buffer that is too small, it will never shrink
+that buffer. To prevent these buffers from getting out of hand, the program will
+resize a buffer if its size has crossed a certain threshold.
 
 ## Status
 
 - [x] Default behavior with no options
-- [ ] Shrink very large buffers when no longer necessary
+- [x] Shrink very large buffers when no longer necessary
 - [ ] `-c`, `-n`, and `-r` options
 - [ ] `-f` option
 - [ ] Full POSIX implementation

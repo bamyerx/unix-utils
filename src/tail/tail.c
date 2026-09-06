@@ -14,7 +14,11 @@
 #include <string.h>
 #include <unistd.h>
 
+/* default number of lines to print */
 #define N_DEFAULT 10
+
+/* threshold at which to shrink an allocated buffer */
+#define BUFMAX 2048
 
 /* return statuses */
 enum status {
@@ -91,7 +95,21 @@ tail(FILE *fp, size_t n, int *error)
 	size_t nlines = 0;
 
 	/* read in each line while maintaining the last n lines in the queue */
-	while (getline(&lines[last].ptr, &lines[last].size, fp) != -1) {
+	for (;;) {
+		ssize_t len = getline(&lines[last].ptr, &lines[last].size, fp);
+		if (len == -1)
+			break;
+		
+		/* shrink the buffer if unnecessarily large */
+		if ((size_t) len < BUFMAX && BUFMAX < lines[last].size) {
+			char *temp = realloc(lines[last].ptr, (size_t) len + 1);
+			if (temp != NULL) {
+				lines[last].ptr = temp;
+				lines[last].size = len + 1;
+			}
+			/* if realloc fails, continue with the old buffer */
+		}
+
 		if (nlines == n)
 			first = (first + 1) % n;
 		else
