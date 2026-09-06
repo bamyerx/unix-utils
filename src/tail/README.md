@@ -54,15 +54,16 @@ cases:
 
 The first case has logic nearly identical to that of [`head`](src/head/). The second case uses
 a queue of lines fetched by `getline()`; this queue is fixed and circular when `-n`
-is used and grows dynamically if `-r` is specified by itself. The third case's
-implementation is currently incomplete because I use `fseeko()` to seek to the
-end of the file which does not work for non-seekable inputs.
+is used and grows dynamically if `-r` is specified by itself. The third case
+simply seeks to an offset of N from the end of the file and prints the remaining
+bytes for seekable inputs and uses a circular queue analogous to that in the
+second case for unseekable inputs.
 
 ## Status
 
 - [x] Default behavior with no options
 - [x] Shrink very large buffers when no longer necessary
-- [x] `-c`, `-n`, and `-r` options (`-c` is only implemented for seekable inputs)
+- [x] `-c`, `-n`, and `-r` options
 - [ ] `-f` option
 - [ ] Full POSIX implementation
 

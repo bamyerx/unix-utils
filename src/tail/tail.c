@@ -50,8 +50,9 @@ static void usage(void);
 static int tail(FILE *fp, size_t n, int mode, int *error);
 static int tail_from_beginning(FILE *fp, size_t n, bool lines, int *error);
 static int lines_from_end(FILE *fp, size_t n, int mode, int *error);
-static int bytes_from_end(FILE *fp, size_t n, int *error);
 static void free_lines(struct line *lines, size_t n);
+static int bytes_from_end(FILE *fp, size_t n, int *error);
+static int bytes_from_end_buffered(FILE *fp, size_t n, int *error);
 static size_t strtosize(const char *restrict nptr, char **restrict endptr, int base);
 
 int
@@ -194,9 +195,11 @@ tail(FILE *fp, size_t n, int mode, int *error)
 		return lines_from_end(fp, n, mode, error);
 	case BYTES_FROM_END:
 		return bytes_from_end(fp, n, error);
+	default:
+		/* this should not happen */
+		fprintf(stderr, "tail: invalid mode\n");
+		abort();
 	}
-	/* not reached */
-	return -1;
 }
 
 /* 
@@ -250,7 +253,7 @@ lines_from_end(FILE *fp, size_t n, int mode, int *error)
 		if (len == -1)
 			break;
 		
-		/* shrink the buffer if unnecessarily large */
+		/* shrink lines[last] if unnecessarily large */
 		if ((size_t) len < BUFMAX && BUFMAX < lines[last].size) {
 			char *temp = realloc(lines[last].ptr, (size_t) len + 1);
 			if (temp != NULL) {
@@ -332,12 +335,19 @@ free_lines(struct line *lines, size_t n)
 static int
 bytes_from_end(FILE *fp, size_t n, int *error)
 {
-	/* determine the size of the file */
+	/* try to seek to the end of the file */
 	if (fseeko(fp, 0, SEEK_END) == -1) {
-		/* seek error */
+
+		/* unseekable input; use buffering instead */
+		if (errno == ESPIPE)
+			return bytes_from_end_buffered(fp, n, error);
+
+		/* some other seek error */
 		*error = errno;
 		return ERROR;
 	}
+
+	/* maximum possible offset in the file */
 	off_t end = ftello(fp);
 	if (end == -1) {
 		/* tell error */
@@ -370,6 +380,56 @@ bytes_from_end(FILE *fp, size_t n, int *error)
 		return ERROR;
 	}
 
+	return SUCCESS;
+}
+
+/* 
+ * bytes_from_end_buffered: 
+ * use a circular queue to copy the last n bytes of fp to stdout
+ */
+static int
+bytes_from_end_buffered(FILE *fp, size_t n, int *error)
+{
+	int c;
+
+	/* allocate a n-byte queue */
+	char *buf = malloc(n);
+	if (buf == NULL) {
+		*error = errno;
+		return ERROR;
+	}
+	size_t first = 0;
+	size_t last = 0;
+	size_t nbytes = 0;
+
+	/* read in the bytes, keeping the last n bytes read */
+	while ((c = getc(fp)) != EOF) {
+		if (nbytes == n)
+			first = (first + 1) % n;
+		else
+			nbytes++;
+		buf[last] = c;
+		last = (last + 1) % n;
+	}
+
+	if (ferror(fp)) {
+		/* read error */
+		*error = errno;
+		free(buf);
+		return ERROR;
+	}
+
+	/* print the buffered bytes */
+	for (size_t count = nbytes; count-- > 0; first = (first + 1) % n) {
+		if (putchar(buf[first]) == EOF) {
+			/* write error */
+			*error = errno;
+			free(buf);
+			return ERROR;
+		}
+	}
+
+	free(buf);
 	return SUCCESS;
 }
 
