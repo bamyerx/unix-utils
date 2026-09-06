@@ -41,17 +41,28 @@ POSIX.1-2024
 
 ## Implementation Notes
 
-`getline()` is used to read in each line which is maintained in a circular array
-queue of the last `n` lines, where `n` is the number of lines requested. However,
-while `getline()` will `realloc()` a buffer that is too small, it will never shrink
-that buffer. To prevent these buffers from getting out of hand, the program will
-resize a buffer if its size has crossed a certain threshold.
+The `-c`, `-n`, and `-r` options as specified by POSIX define six distinct behaviors
+for `tail`: `-c` can be specified relative to the beginning or the end, `-n` can be
+specified relative to the beginning or the end, and `-r` can be specified with `-n`
+or without it. This implementation uses groups these six behaviors into three
+cases:
+
+- Lines or bytes printed relative to the beginning of the file (`-c` or `-n` with a
+  +N argument)
+- Lines printed relative to the end of the file (`-n` -N with or without `-r`)
+- Bytes printed relative to the end of the file (`-c` -N)
+
+The first case has logic nearly identical to that of [`head`](src/head/). The second case uses
+a queue of lines fetched by `getline()`; this queue is fixed and circular when `-n`
+is used and grows dynamically if `-r` is specified by itself. The third case's
+implementation is currently incomplete because I use `fseeko()` to seek to the
+end of the file which does not work for non-seekable inputs.
 
 ## Status
 
 - [x] Default behavior with no options
 - [x] Shrink very large buffers when no longer necessary
-- [ ] `-c`, `-n`, and `-r` options
+- [x] `-c`, `-n`, and `-r` options (`-c` is only implemented for seekable inputs)
 - [ ] `-f` option
 - [ ] Full POSIX implementation
 
