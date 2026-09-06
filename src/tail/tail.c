@@ -261,7 +261,7 @@ lines_from_end(FILE *fp, size_t n, int mode, int *error)
 		}
 
 		/* dynamically grow the queue if printing every line in reverse */
-		if (mode == REVERSE_ALL && nlines >= n) {
+		if (mode == REVERSE_ALL && nlines == n - 1) {
 
 			/* maximum size before overflowing size_t */
 			size_t max = SIZE_MAX / sizeof *lines;
