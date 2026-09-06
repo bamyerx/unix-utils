@@ -140,7 +140,7 @@ head(FILE *fp, size_t n, int mode, int *error)
 }
 
 /*
- * strtosize: convert a string to a nonnegative size_t value
+ * strtosize: convert a string to a size_t value
  *
  * Note: I will be factoring this out as a library function in a later iteration.
  */

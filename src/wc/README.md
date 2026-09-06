@@ -52,6 +52,6 @@ are specified. Specifying an option only changes what is printed.
 
 ## References
 
-- IEEE Std 1003.1-2024, *wc*.
-- Free Software Foundation. “wc(1).” *GNU Coreutils Manual*, version 9.11,
-  2026.
+- The Open Group.
+  *[wc](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/wc.html)*.
+  *The Open Group Base Specifications Issue 8*, IEEE Std 1003.1-2024, 2024.

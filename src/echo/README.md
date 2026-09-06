@@ -37,6 +37,6 @@ therefore, this implementation writes all operands literally.
 
 ## References
 
-- IEEE Std 1003.1-2024, *echo*.
-- Free Software Foundation. “echo(1).” *GNU Coreutils Manual*, version 9.11,
-  2026.
+- The Open Group.
+  *[echo](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/echo.html)*.
+  *The Open Group Base Specifications Issue 8*, IEEE Std 1003.1-2024, 2024.

@@ -31,4 +31,6 @@ Uses getc() and putc() to implement cat.
 
 ## References
 
-- IEEE Std 1003.1-2024, *cat*.
+- The Open Group. 
+  *[cat](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/cat.html)*.
+  *The Open Group Base Specifications Issue 8*, IEEE Std 1003.1-2024, 2024.

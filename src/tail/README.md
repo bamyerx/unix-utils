@@ -73,6 +73,6 @@ file operand.
 
 ## References
 
-- The Open Group. *[tail](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/tail.html)*.
+- The Open Group. 
+  *[tail](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/tail.html)*.
   *The Open Group Base Specifications Issue 8*, IEEE Std 1003.1-2024, 2024.
-
