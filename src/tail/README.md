@@ -59,14 +59,20 @@ simply seeks to an offset of N from the end of the file and prints the remaining
 bytes for seekable inputs and uses a circular queue analogous to that in the
 second case for unseekable inputs.
 
+`-f` is applied independently of the other options and their associated `tail` modes,
+and follows files only when the input is a regular file or a FIFO specied with a
+file operand.
+
 ## Status
 
 - [x] Default behavior with no options
 - [x] Shrink very large buffers when no longer necessary
 - [x] `-c`, `-n`, and `-r` options
-- [ ] `-f` option
-- [ ] Full POSIX implementation
+- [x] `-f` option
+- [x] Full POSIX implementation
 
 ## References
 
-- IEEE Std 1003.1-2024, *tail*.
+- The Open Group. *[tail](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/tail.html)*.
+  *The Open Group Base Specifications Issue 8*, IEEE Std 1003.1-2024, 2024.
+

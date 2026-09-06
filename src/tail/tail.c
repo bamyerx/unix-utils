@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 /* default number of lines to print */
@@ -27,7 +28,9 @@
 /* return statuses */
 enum status {
 	SUCCESS,
-	ERROR
+	ERROR,
+	INVALID_MODE,
+	INVALID_FILE
 };
 
 /* modes */
@@ -54,6 +57,7 @@ static void free_lines(struct line *lines, size_t n);
 static int bytes_from_end(FILE *fp, size_t n, int *error);
 static int bytes_from_end_buffered(FILE *fp, size_t n, int *error);
 static size_t strtosize(const char *restrict nptr, char **restrict endptr, int base);
+static int follow(FILE *fp, bool file_operand, int *error);
 
 int
 main(int argc, char *argv[])
@@ -66,9 +70,10 @@ main(int argc, char *argv[])
 	size_t n = 0;
 	int c;
 	char *endptr;
+	bool fflag = false;
 
-	/* supported options: -c, -n, -r */
-	while ((c = getopt(argc, argv, "c:n:r")) != -1) {
+	/* supported options: -c, -n, -r, -f */
+	while ((c = getopt(argc, argv, "c:n:rf")) != -1) {
 		char *temp;
 		switch (c) {
 		case 'c':
@@ -118,6 +123,9 @@ main(int argc, char *argv[])
 			mode = REVERSE;
 			break;
 
+		case 'f':
+			fflag = true;
+			break;
 		default:
 			usage();
 			return EXIT_FAILURE;
@@ -152,8 +160,17 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	/* error during tail */
-	if (tail(fp, n, mode, &error) == ERROR) {
+	int r = tail(fp, n, mode, &error);
+	if (r == ERROR) {
+		fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(error));
+		exit_status = EXIT_FAILURE;
+	} else if (r == INVALID_MODE) {
+		fprintf(stderr, "%s: %s: invalid mode\n", argv[0], name);
+		exit_status = EXIT_FAILURE;
+	}
+
+	bool file_operand = name != NULL;
+	if (fflag && follow(fp, file_operand, &error) == ERROR) {
 		fprintf(stderr, "%s: %s: %s\n", argv[0], name, strerror(error));
 		exit_status = EXIT_FAILURE;
 	}
@@ -197,8 +214,7 @@ tail(FILE *fp, size_t n, int mode, int *error)
 		return bytes_from_end(fp, n, error);
 	default:
 		/* this should not happen */
-		fprintf(stderr, "tail: invalid mode\n");
-		abort();
+		return INVALID_MODE;
 	}
 }
 
@@ -335,7 +351,6 @@ free_lines(struct line *lines, size_t n)
 static int
 bytes_from_end(FILE *fp, size_t n, int *error)
 {
-	/* try to seek to the end of the file */
 	if (fseeko(fp, 0, SEEK_END) == -1) {
 
 		/* unseekable input; use buffering instead */
@@ -464,4 +479,62 @@ strtosize(const char *restrict nptr, char **restrict endptr, int base)
 	}
 
 	return (size_t) val;
+}
+
+/* follow: continue to copy data to stdout from fp */
+static int
+follow(FILE *fp, bool file_operand, int *error)
+{
+	int c;
+
+	int fd = fileno(fp);
+	if (fd == -1) {
+		/* file descriptor error */
+		*error = errno;
+		return ERROR;
+	}
+	
+	struct stat sb;
+	if (fstat(fd, &sb) == -1) {
+		/* file status error */
+		*error = errno;
+		return ERROR;
+	}
+
+	/*
+	 * POSIX specifies that -f will continue to append data if:
+	 * - the input file is a regular file, or
+	 * - the file operand specifies a FIFO
+	 *
+	 * The -f option will be ignored if:
+	 * - No file operand is specified and stdin is a pipe or FIFO
+	 *
+	 * POSIX does not specify if -f is ignored in the cases where the input file
+	 * is not a FIFO, pipe, or regular file; this implementation will ignore -f
+	 * in these cases as well.
+	 */
+	if (S_ISREG(sb.st_mode) || (file_operand && S_ISFIFO(sb.st_mode))) {
+
+		/* check for new data on a one-second loop */
+		for (;;) {
+			while ((c = getc(fp)) != EOF)
+				if (putchar(c) == EOF) {
+					/* write error */
+					*error = errno;
+					return ERROR;
+				}
+
+			if (ferror(fp)) {
+				/* read error */
+				*error = errno;
+				return ERROR;
+			}
+			
+			/* clear EOF indicator for next iteration */
+			clearerr(fp);
+			sleep(1);
+		}
+	}
+	
+	return SUCCESS;
 }
